@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="authoring-tool" content="Adobe_Animate_CC">
+    <title>Курсовая работа</title>
+    
+    <!--fonts-->
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:400,700|Material+Icons" />
+    <link href="style/normalize.css" rel="stylesheet">
+
+    <link href="style/style-stuctura.css" rel="stylesheet">
+    
+
+    <!--Map-->
+    <script src="https://code.createjs.com/createjs-2015.11.26.min.js"></script>
+    <script src="Карта.js"></script>
+    <script>
+    var canvas, stage, exportRoot, anim_container, dom_overlay_container, fnStartAnimation;
+    function init() {
+        canvas = document.getElementById("canvas");
+        anim_container = document.getElementById("animation_container");
+        dom_overlay_container = document.getElementById("dom_overlay_container");
+        var comp=AdobeAn.getComposition("AAD40BC3548EFE42B0039B21B55D600E");
+        var lib=comp.getLibrary();
+        var loader = new createjs.LoadQueue(false);
+        loader.installPlugin(createjs.Sound);
+        loader.addEventListener("fileload", function(evt){handleFileLoad(evt,comp)});
+        loader.addEventListener("complete", function(evt){handleComplete(evt,comp)});
+        var lib=comp.getLibrary();
+        loader.loadManifest(lib.properties.manifest);
+    }
+    function handleFileLoad(evt, comp) {
+        var images=comp.getImages();	
+        if (evt && (evt.item.type == "image")) { images[evt.item.id] = evt.result; }	
+    }
+    function handleComplete(evt,comp) {
+        //This function is always called, irrespective of the content. You can use the variable "stage" after it is created in token create_stage.
+        var lib=comp.getLibrary();
+        var ss=comp.getSpriteSheet();
+        var queue = evt.target;
+        var ssMetadata = lib.ssMetadata;
+        for(i=0; i<ssMetadata.length; i++) {
+            ss[ssMetadata[i].name] = new createjs.SpriteSheet( {"images": [queue.getResult(ssMetadata[i].name)], "frames": ssMetadata[i].frames} )
+        }
+        exportRoot = new lib.Карта();
+        stage = new lib.Stage(canvas);
+        stage.enableMouseOver();	
+        //Registers the "tick" event listener.
+        fnStartAnimation = function() {
+            stage.addChild(exportRoot);
+            createjs.Ticker.setFPS(lib.properties.fps);
+            createjs.Ticker.addEventListener("tick", stage)
+            stage.addEventListener("tick", handleTick)
+            function getProjectionMatrix(totalDepth) {
+                var focalLength = 528.25;
+                var projectionCenter = { x : lib.properties.width/2, y : lib.properties.height/2 };
+                var scale = (totalDepth + focalLength)/focalLength;
+                var scaleMat = new createjs.Matrix2D;
+                scaleMat.a = 1/scale;
+                scaleMat.d = 1/scale;
+                var projMat = new createjs.Matrix2D;
+                projMat.tx = -projectionCenter.x;
+                projMat.ty = -projectionCenter.y;
+                projMat = projMat.prependMatrix(scaleMat);
+                projMat.tx += projectionCenter.x;
+                projMat.ty += projectionCenter.y;
+                return projMat;
+            }
+            function handleTick(event) {
+                var focalLength = 528.25;
+                var cameraInstance = exportRoot.___camera___instance;
+            if(cameraInstance !== undefined && cameraInstance.pinToObject !== undefined)
+            {
+                cameraInstance.x = cameraInstance.pinToObject.x + cameraInstance.pinToObject.pinOffsetX;
+                cameraInstance.y = cameraInstance.pinToObject.y + cameraInstance.pinToObject.pinOffsetY;
+                if(cameraInstance.pinToObject.parent !== undefined && cameraInstance.pinToObject.parent.depth !== undefined)
+                    cameraInstance.depth = cameraInstance.pinToObject.parent.depth + cameraInstance.pinToObject.pinOffsetZ;
+            }
+                for(child in exportRoot.children)
+                {
+                    var layerObj = exportRoot.children[child];
+                    if(layerObj == cameraInstance)
+                        continue;
+                        if(layerObj.currentFrame != layerObj.parent.currentFrame)
+                        {
+                            layerObj.gotoAndPlay(layerObj.parent.currentFrame);
+                        }
+                    var matToApply = new createjs.Matrix2D;
+                    var cameraMat = new createjs.Matrix2D;
+                    var totalDepth = layerObj.layerDepth ? layerObj.layerDepth : 0;
+                    var cameraDepth = 0;
+                    if(cameraInstance && !layerObj.isAttachedToCamera)
+                    {
+                        var stageCenter = { 'x' : lib.properties.width/2, 'y' : lib.properties.height/2 };
+                        var mat = cameraInstance.getMatrix();
+                        mat.tx -= stageCenter.x;
+                        mat.ty -= stageCenter.y;
+                        cameraMat = mat.invert();
+                        cameraMat.prependTransform(stageCenter.x, stageCenter.y, 1, 1, 0, 0, 0, 0, 0);
+                        cameraMat.appendTransform(-stageCenter.x, -stageCenter.y, 1, 1, 0, 0, 0, 0, 0);
+                        if(cameraInstance.depth)
+                            cameraDepth = cameraInstance.depth;
+                    }
+                    if(layerObj.depth)
+                    {
+                        totalDepth = layerObj.depth;
+                    }
+                    //Offset by camera depth
+                    totalDepth -= cameraDepth;
+                    if(totalDepth < -focalLength)
+                    {
+                        matToApply.a = 0;
+                        matToApply.d = 0;
+                    }
+                    else
+                    {
+                        if(layerObj.layerDepth)
+                        {
+                            var sizeLockedMat = getProjectionMatrix(layerObj.layerDepth);
+                            if(sizeLockedMat)
+                            {
+                                sizeLockedMat.invert();
+                                matToApply.prependMatrix(sizeLockedMat);
+                            }
+                        }
+                        matToApply.prependMatrix(cameraMat);
+                        var projMat = getProjectionMatrix(totalDepth);
+                        if(projMat)
+                        {
+                            matToApply.prependMatrix(projMat);
+                        }
+                    }
+                    layerObj.transformMatrix = matToApply;
+                }
+            }
+        }	    
+        //Code to support hidpi screens and responsive scaling.
+        function makeResponsive(isResp, respDim, isScale, scaleType) {		
+            var lastW, lastH, lastS=1;		
+            window.addEventListener('resize', resizeCanvas);		
+            resizeCanvas();		
+            function resizeCanvas() {			
+                var w = lib.properties.width, h = lib.properties.height;			
+                var iw = window.innerWidth, ih=window.innerHeight;			
+                var pRatio = window.devicePixelRatio || 1, xRatio=iw/w, yRatio=ih/h, sRatio=1;			
+                if(isResp) {                
+                    if((respDim=='width'&&lastW==iw) || (respDim=='height'&&lastH==ih)) {                    
+                        sRatio = lastS;                
+                    }				
+                    else if(!isScale) {					
+                        if(iw<w || ih<h)						
+                            sRatio = Math.min(xRatio, yRatio);				
+                    }				
+                    else if(scaleType==1) {					
+                        sRatio = Math.min(xRatio, yRatio);				
+                    }				
+                    else if(scaleType==2) {					
+                        sRatio = Math.max(xRatio, yRatio);				
+                    }			
+                }			
+                canvas.width = w*pRatio*sRatio;			
+                canvas.height = h*pRatio*sRatio;
+                canvas.style.width = dom_overlay_container.style.width = anim_container.style.width =  w*sRatio+'px';				
+                canvas.style.height = anim_container.style.height = dom_overlay_container.style.height = h*sRatio+'px';
+                stage.scaleX = pRatio*sRatio;			
+                stage.scaleY = pRatio*sRatio;			
+                lastW = iw; lastH = ih; lastS = sRatio;            
+                stage.tickOnUpdate = false;            
+                stage.update();            
+                stage.tickOnUpdate = true;		
+            }
+        }
+        makeResponsive(false,'both',false,1);	
+        AdobeAn.compositionLoaded(lib.properties.id);
+        fnStartAnimation();
+    }
+    function playSound(id, loop) {
+        return createjs.Sound.play(id, createjs.Sound.INTERRUPT_EARLY, 0, 0, loop);
+    }
+    </script>
+
+    <!--slider-->
+    
+    
+    <link rel="stylesheet" type="text/css" href="./slick/slick.css">
+    <link rel="stylesheet" type="text/css" href="./slick/slick-theme.css">
+    <style type="text/css">
+        .slick-prev:before,
+        .slick-next:before {
+        color: black;
+        }
+        .slider2
+        {
+            display: none;
+        }
+        #slide1f
+        {
+            display: flex; align-items: center; justify-content: space-around;
+        }
+        @media (max-width: 840px){
+            #slide1f
+        {
+            display: inline-block;
+        }
+        .slider2
+        {
+            display: block;
+        }
+        .slider1
+        {
+            display: none;
+        }
+        .slick-dotted.slick-slider {
+            margin-bottom: 30px;
+            margin-top: 110px;
+        }
+        .slick-slider
+        {
+            margin-bottom: 10px;
+        }
+        .ass-description
+        {
+            margin-left: 0;
+        }
+        }
+
+    </style>
+
+    <style>
+
+        #myImg, #myImg1, #myImg2, #myImg3, #myImg4 {
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        
+        #myImg:hover, #myImg1:hover, #myImg2:hover, #myImg3:hover, #myImg4:hover {opacity: 0.7;}
+        
+        /* The Modal (background) */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 99; /* Sit on top */
+            padding-top: 100px; /* Location of the box */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgb(0,0,0); /* Fallback color */
+            background-color: rgba(0,0,0,0.9); /* Black w/ opacity */
+        }
+        
+        /* Modal Content (image) */
+        .modal-content {
+            margin: auto;
+            display: block;
+            width: 80%;
+            max-width: 700px;
+        }
+        
+        /* Caption of Modal Image */
+        #caption {
+            margin: auto;
+            display: block;
+            width: 80%;
+            max-width: 700px;
+            text-align: center;
+            color: #ccc;
+            padding: 10px 0;
+            height: 150px;
+        }
+        
+        /* Add Animation */
+        .modal-content, #caption {    
+            -webkit-animation-name: zoom;
+            -webkit-animation-duration: 0.6s;
+            animation-name: zoom;
+            animation-duration: 0.6s;
+        }
+        
+        @-webkit-keyframes zoom {
+            from {-webkit-transform:scale(0)} 
+            to {-webkit-transform:scale(1)}
+        }
+        
+        @keyframes zoom {
+            from {transform:scale(0)} 
+            to {transform:scale(1)}
+        }
+        
+        /* The Close Button */
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        
+        .close:hover,
+        .close:focus {
+            color: #bbb;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        /* 100% Image Width on Smaller Screens */
+        @media only screen and (max-width: 700px){
+            .modal-content {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body onload="init();">	
+    <header class="header">
+        <div class="header-block">
+            <span class="m-menu">
+                <span class="line"></span>
+                <span class="line2"></span>
+                <span class="line3"></span>
+            </span>
+            <div class="name">
+                <a href="index.html" class="link">Измерение сопротивления мостовым методом</a>
+            </div>
+            <div class="navigation">
+                <nav class="navigation-panel">
+                    <a href="theory.html" class="navigation-link">Теоретические сведения</a>
+                    <a href="structura.html" class="navigation-link">Структура установки</a>
+                    <a href="#" class="navigation-link">Симулятор установки</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <div class="about">
+        <div class="about-us"><h1 class="title">Структура установки</h1>
+            <h2 class="title-text">Измерение сопротивления мостовым методом</h4>
+                <a href="Profile.html" class="title-text">Выполнила: Иванова Алеся Александровна ИСиТ-3</a>
+                <button class="button hero-button wow fadeInRight" data-wow-delay="0.8s">Симулятор установки</button>
+        </div>
+    </div>
+    
+    <div class="menu-sitebar">
+        <nav class="nav-group">
+            <a href="theory.html" class="navigation-link">Теоретические сведения</a>
+            <a href="structura.html" class="navigation-link">Структура установки</a>
+            <a href="#" class="navigation-link">Симулятор установки</a>
+        </nav>
+        <!--1-st nav-group-->
+    </div>
+   
+    <div class="container">
+        <div id="myModal" class="modal">
+        <span class="close">×</span>
+        <img class="modal-content" id="img01">
+        <div id="caption"></div>
+        </div>
+            <div class="assortment">
+            <div class="assortment-title"><h1>Фотогалерея установки</h1></div> 
+        </div>
+        
+    
+        <section class="regular slider1">
+            <div>
+                <div id="slide1f">
+                    <img id="myImg" src="image/Slide_1.jpg" height="300vw" style="width: 490px">
+                    <div class="ass-description">
+                        Так выглядит вся установка, в нее входят следующие элементы: 
+                        Мост Уитстона, Линейка железная, на 90 см, Магазин сопротивлений, ключ, мультирезистор
+                    </div> 
+                    <script>
+                        // Get the modal
+                        var modal = document.getElementById('myModal');
+                            
+                            // Get the image and insert it inside the modal - use its "alt" text as a caption
+                            var img = document.getElementById('myImg');
+                            var modalImg = document.getElementById("img01");
+                            var captionText = document.getElementById("caption");
+                            img.onclick = function()
+                                {
+                                        modal.style.display = "block";
+                                        modalImg.src = this.src;
+                                        captionText.innerHTML = this.alt;
+                                }
+                                // Get the <span> element that closes the modal
+                                var span = document.getElementsByClassName("close")[0];
+                                
+                                // When the user clicks on <span> (x), close the modal
+                                span.onclick = function() { 
+                                    modal.style.display = "none";
+                                }
+                        
+                        
+                    </script>
+                </div>
+            </div>
+            <div>
+                <div id="slide1f"> 
+                    <img id="myImg1" src="image/Slide_2.jpg" height="300vw" style="width: 300px">
+                    <div class="ass-description">
+                        Мультирезистор: На нем можно выставить последовательное и параллельное соединение
+                        одного, двух или трех резисторов
+                    </div>
+                    <script>
+                        // Get the modal
+                        var modal = document.getElementById('myModal');
+                        
+                        // Get the image and insert it inside the modal - use its "alt" text as a caption
+                        var img = document.getElementById('myImg1');
+                        var modalImg = document.getElementById("img01");
+                        var captionText = document.getElementById("caption");
+                        img.onclick = function(){
+                            modal.style.display = "block";
+                            modalImg.src = this.src;
+                            captionText.innerHTML = this.alt;
+                        }
+                        
+                        // Get the <span> element that closes the modal
+                        var span = document.getElementsByClassName("close")[0];
+                        
+                        // When the user clicks on <span> (x), close the modal
+                        span.onclick = function() { 
+                            modal.style.display = "none";
+                        }
+                        </script>
+                </div>
+            </div>
+            <div>
+                <div id="slide1f"> 
+                    <img id="myImg2" src="image/Slide_3.jpg" height="300vw" style="width: 350px">
+                    <div class="ass-description">
+                        Мост Уитстона для измерения сопротивления. Именно на нем и происходит определение равности
+                     как только стрелка покажет 0 - можем записывать сопротивление, которое будет настраиваться на магазине 
+                     сопротивлений
+                    </div>
+                    <script>
+                        // Get the modal
+                        var modal = document.getElementById('myModal');
+                        
+                        // Get the image and insert it inside the modal - use its "alt" text as a caption
+                        var img = document.getElementById('myImg2');
+                        var modalImg = document.getElementById("img01");
+                        var captionText = document.getElementById("caption");
+                        img.onclick = function(){
+                            modal.style.display = "block";
+                            modalImg.src = this.src;
+                            captionText.innerHTML = this.alt;
+                        }
+                        
+                        // Get the <span> element that closes the modal
+                        var span = document.getElementsByClassName("close")[0];
+                        
+                        // When the user clicks on <span> (x), close the modal
+                        span.onclick = function() { 
+                            modal.style.display = "none";
+                        }
+                        </script>
+                </div>
+            </div>
+            <div>
+                <div id="slide1f"> 
+                    <img id="myImg3" src="image/Slide_4.jpg"  height="300vw" style="width: 490px">
+                    <div class="ass-description">
+                       Магазин сопротивлений, позволяет выстравать нужное нам сопротивление для получение 
+                       нуля на показателе моста Уитстона. Диапазон такого магазина составляет 0,01 - 10 000 Ом (погрешность в 0,005 Ом)
+                    </div>
+                    <script>
+                        // Get the modal
+                        var modal = document.getElementById('myModal');
+                        
+                        // Get the image and insert it inside the modal - use its "alt" text as a caption
+                        var img = document.getElementById('myImg3');
+                        var modalImg = document.getElementById("img01");
+                        var captionText = document.getElementById("caption");
+                        img.onclick = function(){
+                            modal.style.display = "block";
+                            modalImg.src = this.src;
+                            captionText.innerHTML = this.alt;
+                        }
+                        
+                        // Get the <span> element that closes the modal
+                        var span = document.getElementsByClassName("close")[0];
+                        
+                        // When the user clicks on <span> (x), close the modal
+                        span.onclick = function() { 
+                            modal.style.display = "none";
+                        }
+                        </script>
+                </div>
+            </div>
+            <div>
+                <div id="slide1f"> 
+                    <img id="myImg4" src="image/Slide_5.jpg" height="300vw" style="width: 300px">
+                    <div class="ass-description">
+                        Ключ - маленькая, но очень необходимая часть установки. При замыкании ключа ток идет на резисторы и мы 
+                        можем отмерить сопротивление
+                    </div>
+                    <script>
+                        // Get the modal
+                        var modal = document.getElementById('myModal');
+                        
+                        // Get the image and insert it inside the modal - use its "alt" text as a caption
+                        var img = document.getElementById('myImg4');
+                        var modalImg = document.getElementById("img01");
+                        var captionText = document.getElementById("caption");
+                        img.onclick = function(){
+                            modal.style.display = "block";
+                            modalImg.src = this.src;
+                            captionText.innerHTML = this.alt;
+                        }
+                        
+                        // Get the <span> element that closes the modal
+                        var span = document.getElementsByClassName("close")[0];
+                        
+                        // When the user clicks on <span> (x), close the modal
+                        span.onclick = function() { 
+                            modal.style.display = "none";
+                        }
+                        </script>
+                </div>
+            </div>
+          </section>
+          <section class="slider-nav slider">
+            <div>
+                <img src="image/Slide_1.jpg" height="100vw">
+            </div>
+            <div>
+                <img src="image/Slide_2.jpg" height="100vw">
+            </div>
+            <div>
+                <img src="image/Slide_3.jpg" height="100vw">
+            </div>
+            <div>
+                <img src="image/Slide_4.jpg" height="100vw">
+            </div>
+            <div>
+                <img src="image/Slide_5.jpg" height="100vw">
+            </div>
+          </section>
+          
+          <section class="regular1 slider2">
+            <div>
+                <div id="slide1f">
+                    <img id="myImg" src="image/Slide_1.jpg" height="300vw" >
+                    <div class="ass-description">
+                        Так выглядит вся установка, в нее входят следующие элементы: 
+                        Мост Уитстона, Линейка железная, на 90 см, Магазин сопротивлений, ключ, мультирезистор
+                    </div> 
+                </div>
+            </div>
+            <div>
+                <div id="slide1f"> 
+                    <img id="myImg1" src="image/Slide_2.jpg" height="300vw">
+                    <div class="ass-description">
+                        Мультирезистор: На нем можно выставить последовательное и параллельное соединение
+                        одного, двух или трех резисторов
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div id="slide1f"> 
+                    <img id="myImg2" src="image/Slide_3.jpg" height="300vw">
+                    <div class="ass-description">
+                        Мост Уитстона для измерения сопротивления. Именно на нем и происходит определение равности
+                     как только стрелка покажет 0 - можем записывать сопротивление, которое будет настраиваться на магазине 
+                     сопротивлений
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div id="slide1f"> 
+                    <img id="myImg3" src="image/Slide_4.jpg"  height="300vw">
+                    <div class="ass-description">
+                       Магазин сопротивлений. Данное оборудование позволяет выстравать нужное нам сопротивление для получение 
+                       нулевого положения на показателе моста Уитстона. Диапазон такого магазина составляет 0,01 - 10 000 Ом. 
+                       Что позволяет нам максимально точно вычислять сопротивление с погрешностью в 0,005 Ом
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div id="slide1f"> 
+                    <img id="myImg4" src="image/Slide_5.jpg" height="300vw">
+                    <div class="ass-description">
+                        Ключ - маленькая, но очень необходимая часть установки. При замыкании ключа ток идет на резисторы и мы 
+                        можем отмерить сопротивление
+                    </div>
+                </div>
+            </div>
+          </section>
+    
+            <!-- /.projects-slider -->
+            
+            <div id="animation_container" style=" max-width: 1000px; display: flex; justify-content: space-around;
+            align-items: center;
+                max-height: 500px; background-color:rgba(255, 255, 255, 1.00); width:550px; height:400px">
+                <canvas id="canvas" style=" max-width: 500px;
+                max-height: 500px; margin: auto; display: block; background-color:rgba(255, 255, 255, 1.00);"></canvas>
+                <div id="dom_overlay_container" style="pointer-events:none; overflow:hidden; width:550px; height:400px; position: absolute; left: 0px; top: 0px; display: block;">
+                    
+                </div>
+                <div>
+                    <ol>
+                        <li>Магазин сопротивлений</li>
+                        <li>Мост Уитстона</li>
+                        <li>Железная линейка</li>
+                        <li>Резисторы</li>
+                        <li>Ключ</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="videoblock">
+                <div class="video" >
+                    <video id="videoPlayer" width="700px" height="525px" controls="controls" poster="video/Анимационная модель.mp4">
+                        <source src="video/Анимационная модель.mp4" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"'>
+                    </video>
+                </div>
+
+            </div>
+
+    </div>
+    
+    <footer class="footer">
+        <div class="footer-block">
+        <div class="navigation">
+            <nav class="navigation-panel">
+                <a href="theory.html" class="navigation-link">Теоретические сведения</a>
+                <a href="structura.html" class="navigation-link">Структура установки</a>
+                <a href="#" class="navigation-link">Симулятор установки</a>
+            </nav>
+            
+            
+        </div>
+        <div>
+        
+        <div class="icons-panel">
+            <div class="autor">Ivanova Alesia</div>
+            <a href="https://www.instagram.com/alesiai/?hl=ru" class="icon-link">
+                <svg class="header-icon" width="20" height="20" >
+                <use xlink:href="image/panel-icons.svg#instagram"></use>
+                </svg>                           
+            </a>
+            <a href="https://github.com/Alesiai" class="icon-link">
+                <svg class="header-icon" width="30" height="20" >
+                    <use xlink:href="image/panel-icons.svg#facebook"></use>
+                </svg>       
+            </a>
+            <a href="#" class="icon-link">
+                <svg class="header-icon" width="20" height="20" >
+                    <use xlink:href="image/panel-icons.svg#twitter"></use>
+                </svg>                            
+            </a>
+        </div>
+    </div>
+    </div>
+    </footer>
+    <script src="https://code.jquery.com/jquery-2.2.0.min.js" type="text/javascript"></script>
+
+    
+  <script src="./slick/slick.js" type="text/javascript" charset="utf-8"></script>
+  <script type="text/javascript">
+    $(document).on('ready', function() {
+        $('.regular').slick({
+            slidesToShow: 1,
+            slidesToScroll: 1,
+            fade: true,
+            asNavFor: '.slider-nav'
+            });
+            $('.slider-nav').slick({
+            slidesToShow: 3,
+            slidesToScroll: 1,
+            asNavFor: '.regular',
+            arrows: false,
+            dots: true,
+            centerMode: true,
+            focusOnSelect: true
+            });
+
+
+            $('.regular1').slick({
+            slidesToShow: 1,
+            slidesToScroll: 1,
+            fade: true,
+            arrows: true,
+            dots: true,
+            });
+        
+        
+    });
+</script>
+ <script src="js/main.js"></script>
+    
+</body>
+</html>

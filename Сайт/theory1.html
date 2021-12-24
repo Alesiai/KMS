@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>Теория</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link href="layout.css" rel="stylesheet" type="text/css" media="all">
+
+  <!-- База знаний -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="main.css" rel="stylesheet" type="text/css"/>
+
+</head>
+<body id="top">
+
+
+<div class="wrapper row0">
+  <div id="topbar" class="hoc clear">
+    <div class="fl_left">
+      <ul class="nospace inline pushright">
+        <li><i class="fa fa-phone"></i> +375 (44) 709 6988</li>
+        <li><i class="fa fa-envelope-o"></i> hovor007@gmail.com</li>
+        <li><i> Directed by <a href="aboutMe.html"> Vadim Govoronok</a></i></li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="wrapper row1">
+  <header id="header" class="hoc clear">
+    <div id="logo" class="fl_left">
+      <h1><a href="../index.html">Измерение сопротивлений с помощью моста Уитстона</a></h1>
+    </div>
+  </header>
+</div>
+
+
+
+<div class="wrapper row2">
+  <nav id="mainav" class="hoc clear">
+    <ul class="clear">
+      <li class="active"><a href="../index.html">Home</a></li>
+      <li><a href="theory.html">Теория</a></li>
+      <li><a href="aboutLab.html">Описание установки</a></li>
+      <li><a href="../simulator/simulator.html">Симулятор</a></li>
+      <li><a href="aboutMe.html">Об авторе</a></li>
+    </ul>
+  </nav>
+</div>
+
+<div class="wrapper row3">
+  <main class="hoc container clear">
+    <div class="content">
+      <h1>Теоретическое введение</h1>
+      <p>Электрическим током называется любое упорядоченное движение электрических зарядов. В проводнике под действием приложенного электрического поля свободные электрические заряды
+      перемещаются: положительные – по полю, отрицательные – против поля, т. е. в проводнике возникает электрический ток, называемый током проводимости. Свободными носителями электрических зарядов в металлах являются
+        <span id="t2" onmousedown="toimMap()" onmouseout="totextMap()"><b> электроны </b> </span>,
+        в электролитах −
+      положительные и отрицательные ионы, в газах − электроны и положительные
+        <span id="t1" onmousedown="toim()" onmouseout="totext()"><b> ионы </b> </span>, в полупроводниках – электроны и дырки.
+      </p>
+      <p>
+      Для возникновения и существования электрического тока необходимо наличие: а) свободных носителей тока, способных перемещаться упорядоченно; б) электрического поля, энергия которого должна каким-то образом восполняться.
+      </p>
+      <p>
+        <span onmouseover="this.style.color='red'" onmouseout="this.style.color='black'"> Количественной характеристикой </span> электрического тока является сила тока I – физическая величина, численно равная электрическому заряду, прошедшему через поперечное сечение проводника в единицу времени:
+      </p>
+      <p> <img src="../images/pictur/formulas/form1.png" class="scale formulas" ></p>
+
+      <p>Если сила тока в течение времени не изменяется, то такой электрический ток называется постоянным.
+      </p>
+      <p>
+        Участок электрической цепи, не содержащий источников тока, называется <span onmouseover="this.style.color='red'" onmouseout="this.style.color='black'"> однородным </span>. Для такого участка выполняется закон Ома для однородного участка цепи:
+      </p>
+      <p> <img src="../images/pictur/formulas/form2.png" class="scale formulas" ></p>
+
+      <p>
+        Этот закон экспериментально открыл немецкий физик
+        <span onmouseover="this.style.color='red'" onmouseout="this.style.color='black'"> Георг Ом: </span>
+        сила тока I в проводнике прямо пропорциональна напряжению U на его концах и обратно пропорциональна электрическому
+        сопротивлению R проводника (участка).
+      </p>
+      <p>
+        Если в проводнике создать электрическое поле и не принять
+        мер для его поддержания, то перемещение носителей тока приведет очень быстро к тому, что потенциалы всех точек цепи станут
+        одинаковыми и поле внутри проводника исчезнет, а ток прекратится. Для того чтобы поддерживать ток достаточно длительное
+        время, нужно от конца проводника с меньшим потенциалом непрерывно отводить приносимые сюда заряды, а к концу с большим потенциалом непрерывно их подводить (разделение разноименных зарядов), т. е. необходимо наличие в цепи устройства,
+        способного создавать и поддерживать разность потенциалов.
+        Такое устройство называется источником электрического тока.
+        В источниках электрического тока на носители зарядов действуют
+        силы неэлектростатического происхождения, которые называются
+        сторонними. Они могут быть обусловлены химическими процессами, вихревыми электрическими полями, диффузией носителей
+        заряда в неоднородной среде и т. д.
+      </p>
+      <p>
+        Физическая величина, равная работе сторонних сил по перемещению единичного положительного заряда в цепи или на ее участке, называется электродвижущей силой (ЭДС) источника тока:
+      </p>
+      <p> <img src="../images/pictur/formulas/form3.png" class="scale schemas" ></p>
+
+      <p>Эта работа совершается за счет энергии, затрачиваемой в источнике тока. </p>
+      <p>Участок электрической цепи, содержащий последовательно соединенные резисторы и источники тока, называется неоднородным</p>
+
+      <p> <img src="../images/pictur/formulas/form4.png" class="scale formulas" ></p>
+
+      <p>Для такого участка выполняется закон Ома для
+        <span onmouseover="this.style.color='red'" onmouseout="this.style.color='black'"> неоднородного участка цепи:</span> </p>
+      <p> <img src="../images/pictur/formulas/form5.png" class="scale schemas" ></p>
+
+      <p>
+      Если электрическую цепь на замкнуть, то для нее
+      будет выполняться закон Ома для
+        <span onmouseover="this.style.color='red'" onmouseout="this.style.color='black'">замкнутой цепи: </span>
+      </p>
+
+      <p> <img src="../images/pictur/formulas/form6.png" class="scale formulas" ></p>
+
+      <p>Для расчета разветвленных электрических цепей используют
+        <span onmouseover="this.style.color='red'" onmouseout="this.style.color='black'"> правила Кирхгофа. </span> </p>
+
+      <p> <span onmouseover="this.style.color='red'" onmouseout="this.style.color='black'"> Первое правило Кирхгофа. </span>
+        Записывается для узлов разветвленной цепи и основывается на законе сохранения заряда. Согласно этому правилу, алгебраическая сумма токов, сходящихся в узле,
+        равна нулю:</p>
+      <p> <img src="../images/pictur/formulas/form7.png" class="scale formulas" ></p>
+
+      <p>Узлом называют такую точку разветвленной цепи, в которой
+        сходятся три и более проводника. Токи, направленные к узлу, считаются положительными, а токи, направленные от узла, – отрицательными. </p>
+
+      <p><span onmouseover="this.style.color='red'" onmouseout="this.style.color='black'"> Второе правило Кирхгофа. </span>
+        Записывается для любых замкнутых контуров разветвленной цепи и основывается на законах Ома
+        для однородного и неоднородного участков цепи. Согласно этому
+        правилу, алгебраическая сумма произведений сил токов Ii на сопротивления Ri соответствующих участков замкнутого контура
+        разветвленной цепи равна алгебраической сумме ЭДС, содержащихся в этом контуре: </p>
+
+      <p> <img src="../images/pictur/formulas/form8.png" class="scale formulas" ></p>
+
+      <p>Если направление тока совпадает с направлением обхода контура (выбор этого направления произволен), то сила тока I берется
+        со знаком «+», в противоположном случае – со знаком «–». Если источник тока создает ток, направленный в сторону обхода контура (при обходе контура внутри источника мы идем от отрицательного полюса источника к положительному), то его ЭДС берется со
+        знаком «+», в противоположном случае – со знаком «–».
+      </p>
+
+      <p> Формула для определения сопротивления второго блока резисторов.</p>
+      <p> <img src="../images/pictur/formulas/Res2.png" class="scale formulas" ></p>
+
+    </div>
+    <div class="clear"></div>
+  </main>
+</div>
+
+
+<div class="wrapper row4 bgded overlay" style="background-image:url('images/demo/backgrounds/mainPicture.png');">
+  <footer id="footer" class="hoc clear">
+    <div id="cta" class="group">
+      <div class="one_third first"><i class="fa fa-map-marker"></i>
+        <p>Find us</p>
+        <p>Belarus, Minsk, BSTU</p>
+      </div>
+      <div class="one_third"><i class="fa fa-phone"></i>
+        <p>Call us</p>
+        <p>+375 (44) 709 6988</p>
+      </div>
+      <div class="one_third"><i class="fa fa-envelope-o"></i>
+        <p>Email us</p>
+        <p>hovor007@gmail.com</p>
+      </div>
+    </div>
+  </footer>
+</div>
+
+
+
+<div class="wrapper row6">
+  <div id="copyright" class="hoc clear">
+    <p class="fl_left">Copyright &copy; 2020 - All Rights Reserved - <a href="../index.html">Domain Name</a></p>
+  </div>
+</div>
+
+
+
+<a id="backtotop" href="#top"><i class="fa fa-chevron-up"></i></a>
+
+
+<!-- / База знаний -->
+<script src="js\active1.js"></script>
+<script src="https://webasr.yandex.net/jsapi/v1/webspeechkit.js" type="text/javascript"></script>
+<script type="text/javascript" src="jquery.minn.js"></script>
+
+
+</body>
+</html>
